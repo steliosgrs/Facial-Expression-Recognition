@@ -3,8 +3,8 @@ import os
 import matplotlib.pyplot as plt
 import numpy as np
 
-directory = 'D:/EmotionRecognition/images/test3/'
-results_dir = 'D:/EmotionRecognition/images/cropped'
+directory = 'C:/Users/NoLifer/Facial-Expression-Recognition/images/'
+results_dir = 'C:/Users/NoLifer/Facial-Expression-Recognition/cropped/'
 # face_roi = np.zeros((750,750))
 def facecrop(image,name):
 
@@ -27,7 +27,10 @@ def facecrop(image,name):
                 # Crop the face
                 face_roi = roi_color[ey:ey+eh, ex:ex+ew]
                 dir =os.path.join(results_dir, f"Cropped {name}")
+                print(dir)
+                print(face_roi)
                 cv2.imwrite(dir, face_roi)
+
                 # print(type(face_roi))
 
     plt.imshow(cv2.cvtColor(frame,cv2.COLOR_BGR2RGB))
