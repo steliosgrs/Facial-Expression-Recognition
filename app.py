@@ -8,19 +8,11 @@ from tensorflow.keras.models import load_model
 from keras.preprocessing.image import img_to_array
 from streamlit_webrtc import webrtc_streamer, VideoTransformerBase, RTCConfiguration, VideoProcessorBase, WebRtcMode
 
-# load model
-emotion_dict = {0:'angry', 1 :'happy', 2: 'neutral', 3:'sad', 4: 'surprise'}
+# Load model
 emotion_dict = {0:'angry', 1 :'disgust', 2: 'fear', 3:'happy', 4: 'neutral', 5:'sad' , 6:'surprise'}
-# load json and create model
-# json_file = open('emotion_model1.json', 'r')
-# loaded_model_json = json_file.read()
-# json_file.close()
 classifier = load_model('D:cnn_model200_32.h5')
 
-# load weights into new model
-# classifier.load_weights('D:cnn_model200_32.h5')
-
-#load face
+# Load face
 try:
     #face_cascade = cv2.CascadeClassifier('haarcascade_frontalface_alt.xml')
     face_cascade = cv2.CascadeClassifier('haarcascade_frontalface_default.xml')
@@ -35,11 +27,10 @@ class Faceemotion(VideoTransformerBase):
 
         #image gray
         img_gray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
-        faces = face_cascade.detectMultiScale(
-            image=img_gray, scaleFactor=1.3, minNeighbors=5)
+        faces = face_cascade.detectMultiScale(image=img_gray, scaleFactor=1.3, minNeighbors=5)
         for (x, y, w, h) in faces:
-            cv2.rectangle(img=img, pt1=(x, y), pt2=(
-                x + w, y + h), color=(255, 0, 0), thickness=2)
+            cv2.rectangle(img=img, pt1=(x, y), pt2=(x + w, y + h),
+                          color=(255, 0, 0), thickness=2)
             roi_gray = img_gray[y:y + h, x:x + w]
             roi_gray = cv2.resize(roi_gray, (48, 48), interpolation=cv2.INTER_AREA)
             if np.sum([roi_gray]) != 0:
@@ -47,11 +38,15 @@ class Faceemotion(VideoTransformerBase):
                 roi = img_to_array(roi)
                 roi = np.expand_dims(roi, axis=0)
                 prediction = classifier.predict(roi)[0]
+                percent = int(prediction[prediction.argmax()] * 100)  # New
+                percent = str(percent) + '%'
+                percent_position = (x + w, y - 10)  # New
                 maxindex = int(np.argmax(prediction))
                 finalout = emotion_dict[maxindex]
                 output = str(finalout)
             label_position = (x, y)
             cv2.putText(img, output, label_position, cv2.FONT_HERSHEY_SIMPLEX, 1, (0, 255, 0), 2)
+            cv2.putText(img, str(percent), percent_position, cv2.FONT_HERSHEY_SIMPLEX, 1, (0, 255, 0), 2)  # New
 
         return img
 
@@ -89,9 +84,13 @@ def main():
                                     </div>
                                     </br>"""
         st.markdown(html_temp_Webcam1, unsafe_allow_html=True)
+
         webrtc_streamer(key="example", mode=WebRtcMode.SENDRECV, rtc_configuration=RTC_CONFIGURATION,
                         video_processor_factory=Faceemotion)
-
+        col1,col2 = st.columns(2)
+        with col1:
+            col1.header("Text")
+            col1.write("POU EISAI")
 
 
     elif choice == "Analyze Image Emotion":
