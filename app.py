@@ -3,7 +3,7 @@ import cv2
 import streamlit as st
 import tensorflow
 from tensorflow import keras
-
+import threading as th
 from tensorflow.keras.models import load_model
 from keras.preprocessing.image import img_to_array
 from streamlit_webrtc import webrtc_streamer, VideoTransformerBase, RTCConfiguration, VideoProcessorBase, WebRtcMode
@@ -11,6 +11,7 @@ from streamlit_webrtc import webrtc_streamer, VideoTransformerBase, RTCConfigura
 # Load model
 emotion_dict = {0:'angry', 1 :'disgust', 2: 'fear', 3:'happy', 4: 'neutral', 5:'sad' , 6:'surprise'}
 classifier = load_model('D:cnn_model200_32.h5')
+
 
 # Load face
 try:
@@ -24,7 +25,7 @@ RTC_CONFIGURATION = RTCConfiguration({"iceServers": [{"urls": ["stun:stun.l.goog
 class Faceemotion(VideoTransformerBase):
     def transform(self, frame):
         img = frame.to_ndarray(format="bgr24")
-
+        labels = []
         #image gray
         img_gray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
         faces = face_cascade.detectMultiScale(image=img_gray, scaleFactor=1.3, minNeighbors=5)
@@ -52,11 +53,10 @@ class Faceemotion(VideoTransformerBase):
 
 def main():
     # Face Analysis Application #
-    st.title("Εφαρμογή για την διπλωματική εργασία \"Αυτόματη Ανίχνευση, Ανάλυση και Αναγνώριση Συναισθημάτων\"")
+    st.title("Αυτόματη Ανίχνευση, Ανάλυση και Αναγνώριση Συναισθημάτων")
     activiteis = ["Home","Analyze Image Emotion", "Webcam Emotion Recognition", "About"]
     choice = st.sidebar.selectbox("Επιλογή Ενέργειας", activiteis)
-    st.sidebar.markdown(
-        """ """)
+    st.sidebar.markdown(""" """)
     if choice == "Home":
         html_temp_home1 = """<div style="background-color:#6D7B8D;padding:10px">
                                             <h4 style="color:white;text-align:center;">
@@ -71,6 +71,9 @@ def main():
                  """)
     elif choice == "Webcam Emotion Recognition":
         st.header("Webcam Real-time Recognition")
+        # col1, col2 = st.columns(2)
+        # col1,mid, col2 = st.columns([4,1,2])
+
         # st.write("Click on start to use webcam and detect your face emotion")
         html_temp_Webcam1= """<div style="background-color:#6D7B8D;padding:10px">
                                     <h4 style="color:white;text-align:center;">
@@ -80,17 +83,24 @@ def main():
                                     <ol type = "1">
                                     <li>Επιλογή συσκευή κάμερας</li>
                                     <li>Εκίνηση της κάμερας</li>
-                                    </ol> 
+                                    </ol>
                                     </div>
                                     </br>"""
         st.markdown(html_temp_Webcam1, unsafe_allow_html=True)
-
-        webrtc_streamer(key="example", mode=WebRtcMode.SENDRECV, rtc_configuration=RTC_CONFIGURATION,
-                        video_processor_factory=Faceemotion)
-        col1,col2 = st.columns(2)
+        col1, col2 = st.columns(2, gap='small')
         with col1:
             col1.header("Text")
-            col1.write("POU EISAI")
+            webrtc_streamer(key="example", mode=WebRtcMode.SENDRECV, rtc_configuration=RTC_CONFIGURATION,
+                        video_processor_factory=Faceemotion,async_processing=True)
+
+        with col2:
+            col2.header("Text")
+            # col1.write("POU EISAI")
+            html_column2 = """<div style="background-color:#6D7B8D;padding:10px">
+                                                        <h4 style="color:white;">POU EISAI2</h4>
+                                                        </div>
+                                                        </br>"""
+            st.markdown(html_column2, unsafe_allow_html=True)
 
 
     elif choice == "Analyze Image Emotion":
@@ -116,13 +126,12 @@ def main():
         st.markdown(html_temp_about1, unsafe_allow_html=True)
 
         # <h5 style="color:white;text-align:center;">Ευχαριστώ </h5>
-        html_temp4 = """
-                             		<div style="background-color:#98AFC7;padding:10px">
-                             		<h4 style="color:white;text-align:center;">Η εφαρμογή δημιουργήθηκε από τον Στέλιο Γεωργαρά</h4>
-                             		
-                             		</div>
-                             		<br></br>
-                             		<br></br>"""
+        html_temp4 = """<div style="background-color:#98AFC7;padding:10px">
+                        <h4 style="color:white;text-align:center;">
+                        Η εφαρμογή δημιουργήθηκε από τον Στέλιο Γεωργαρά</h4>
+                        </div>
+                        <br></br>
+                        <br></br>"""
 
         st.markdown(html_temp4, unsafe_allow_html=True)
 
@@ -132,3 +141,4 @@ def main():
 
 if __name__ == "__main__":
     main()
+
